@@ -1932,9 +1932,30 @@ class Settings(object):
             sound.start()
         except:
             pass
-        
+
+
+class ServerDialogHelper(object):        
+    """ Contains common logic for server dialog """
+    
+    KNOWN_CONTROLS = set()
+    
+    def on_server_change(self, combobox):
+        """ Disables controls as it is set in server class """
+        servers = nagstamonActions.get_registered_servers()
+        server_class = servers[combobox.get_active_text()]
+        self.KNOWN_CONTROLS.update(server_class.DISABLED_CONTROLS)
+        for item_id in self.KNOWN_CONTROLS:
+            item = self.glade.get_widget(item_id)
+            if item is not None:
+                if item_id in server_class.DISABLED_CONTROLS:
+                    item.set_sensitive(False)
+                else:
+                    item.set_sensitive(True)
+            else:
+                print 'Invalid widget set for disable in %s: %s' % (server_class.__name__, item_id)
+                
             
-class NewServer(object):
+class NewServer(ServerDialogHelper):
     """
         settings of one particuliar new Nagios server
     """
@@ -1963,7 +1984,12 @@ class NewServer(object):
         
         # set server type combobox to Nagios as default
         combobox = self.glade.get_widget("input_combo_server_type")
+        for server in nagstamonActions.get_registered_servers():
+            combobox.append_text(server)
         combobox.set_active(0)
+        
+        combobox.connect('changed', self.on_server_change)
+        self.on_server_change(combobox)
         
         # show settings options for proxy - or not
         self.ToggleProxy()
@@ -2006,9 +2032,8 @@ class NewServer(object):
                     pass
                 
         # set server type combobox which cannot be set by above hazard method
-        server_types = {0:"Nagios", 1:"Opsview", 2:"Centreon"}
         combobox = self.glade.get_widget("input_combo_server_type")
-        new_server.__dict__["type"] = server_types[combobox.get_active()]                   
+        new_server.__dict__["type"] = combobox.get_active_text()                   
    
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
@@ -2082,7 +2107,7 @@ class NewServer(object):
             item.set_sensitive(state)
                     
 
-class EditServer(object):
+class EditServer(ServerDialogHelper):
     """
         settings of one particuliar new Nagios server
     """
@@ -2131,9 +2156,15 @@ class EditServer(object):
                         pass
            
             # set server type combobox which cannot be set by above hazard method
-            server_types = {"Nagios":0, "Opsview":1, "Centreon":2}
+            servers = nagstamonActions.get_registered_servers()
+            server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
             combobox = self.glade.get_widget("input_combo_server_type")
+            for server in servers:
+                combobox.append_text(server)
             combobox.set_active(server_types[self.conf.servers[self.server].type])
+            
+            combobox.connect('changed', self.on_server_change)
+            self.on_server_change(combobox)
                  
             # show settings options for proxy - or not
             self.ToggleProxy()
@@ -2176,9 +2207,8 @@ class EditServer(object):
                     pass
                 
         # set server type combobox which cannot be set by above hazard method
-        server_types = {0:"Nagios", 1:"Opsview", 2:"Centreon"}
         combobox = self.glade.get_widget("input_combo_server_type")
-        new_server.__dict__["type"] = server_types[combobox.get_active()]     
+        new_server.__dict__["type"] = combobox.get_active_text()     
         
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers and new_server.name != self.server:

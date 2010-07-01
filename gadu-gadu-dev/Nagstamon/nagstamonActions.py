@@ -6,7 +6,6 @@ import time
 import datetime
 import urllib
 import webbrowser
-import nagstamonObjects
 import commands
 import re
 # if running on windows import winsound
@@ -633,11 +632,32 @@ def TreeViewNagios(server, host, service):
 def TreeViewHTTP(host):
     # open Browser with URL of some Host
     webbrowser.open("http://" + host)
-        
+
+
+# contains dict with available server classes
+# key is type of server, value is server class
+# used for automatic config generation
+# and holding this information in one place
+REGISTERED_SERVERS = {}
+ 
+def register_server(server):
+    """ Once new server class in created,
+    should be registered with this function
+    for being visible in config and
+    accessible in application.
+    """
+    REGISTERED_SERVERS[server.TYPE] = server
+
+
+def get_registered_servers():
+    """ Returns available server classes dict """
+    return REGISTERED_SERVERS
+
 
 def CreateServer(server=None, conf=None):
     # create Server from config
-    nagiosserver = nagstamonObjects.NagiosServer(conf=conf)
+    import nagstamonObjects # prevents cyclic import
+    nagiosserver = get_registered_servers()[server.type](conf=conf)
     nagiosserver.name = server.name
     nagiosserver.type = server.type
     nagiosserver.nagios_url = server.nagios_url
