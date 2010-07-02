@@ -38,6 +38,8 @@ import sys
 import gc
 import time
 
+import custom # used for initialization of custom components
+
 class Sorting(object):
     """ Sorting persistence purpose class
     Stores tuple pairs in form of:
