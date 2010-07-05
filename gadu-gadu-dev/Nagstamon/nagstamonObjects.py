@@ -8,6 +8,7 @@ import socket
 import gc
 import copy
 import webbrowser
+import urllib
 
 try:
     import lxml.etree, lxml.objectify
@@ -171,7 +172,82 @@ class GenericServer(object):
         hopefully a __del__() method may make this object better collectable for gc
         """
         del(self)
+    
+    def set_recheck(self, thread_obj):
+        self._set_recheck(thread_obj.host, thread_obj.service)
         
+    def _set_recheck(self, host, service):
+        # decision about host or service - they have different URLs
+        if not service:
+            # host
+            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+            html = self.server.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            # fill and encode CGI data
+            cgi_data = urllib.urlencode({"cmd_typ":"96", "cmd_mod":"2", "host":host, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
+        else:
+            # service @ host
+            # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":host, "service":service}), giveback="raw")
+            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            # fill and encode CGI data
+            cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":host, "service":service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
+
+        # execute POST request
+        self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="nothing", cgi_data=cgi_data)
+    
+    def set_acknowledge(self, thread_obj):
+        if thread_obj.acknowledge_all_services == True:
+            all_services = thread_obj.all_services
+        else:
+            all_services = []
+        self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, all_services)
+     
+    def _set_acknowledge(self, host, service, author, comment, all_services=[]):
+        url = self.nagios_cgi_url + "/cmd.cgi"
+        # decision about host or service - they have different URLs
+        # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
+        if not service:
+            # host
+            cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+        else:
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+
+        # running remote cgi command        
+        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+
+        # acknowledge all services on a host
+        for s in all_services:
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+            #running remote cgi command        
+            self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+    
+    def set_downtime(self, thread_obj):
+        self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
+                           thread_obj.start_time, thread_obj.end_time, thread_obj.hours, thread_obj.minutes)
+    
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # decision about host or service - they have different URLs
+        if not service:
+            # host
+            cgi_data = urllib.urlencode({"cmd_typ":"55","cmd_mod":"2","trigger":"0","childoptions":"0","host":host,"com_author":author,"com_data":comment,"fixed":fixed,"start_time":start_time,"end_time":end_time,"hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+        else:
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"56","cmd_mod":"2","trigger":"0","childoptions":"0","host":host,"service":service,"com_author":author,"com_data":comment,"fixed":fixed,"start_time":start_time,"end_time":end_time,"hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+        url = self.nagios_cgi_url + "/cmd.cgi"
+    
+        # running remote cgi command
+        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+    
+    def get_start_end(self, host):
+        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+        start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+        end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
+        # give values back as tuple
+        return start_time, end_time
+     
     def format_item(self, host, service=None):
         if service is None:
             return host
@@ -845,6 +921,30 @@ class OpsviewServer(GenericServer):
     
     TYPE = 'Opsview'
     
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # get action url for opsview downtime form
+        if service == "":
+            # host
+            cgi_data = urllib.urlencode({"cmd_typ":"55", "host":host})
+        else:
+            # service
+            cgi_data = urllib.urlencode({"cmd_typ":"56", "host":host, "service":service})
+        url = self.nagios_cgi_url + "/cmd.cgi"
+        html = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        # which opsview form action to call
+        action = html.split('" enctype="multipart/form-data">')[0].split('action="')[-1]
+        # this time cgi_data does not get encoded because it will be submitted via multipart
+        # to build value for hidden from field old cgi_data is used
+        cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
+        self.FetchURL(self.nagios_url + action, giveback="nothing", cgi_data=cgi_data)
+        
+    def get_start_end(self, host):
+        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+        start_time = html.split('name="starttime" value="')[1].split('"')[0]
+        end_time = html.split('name="endtime" value="')[1].split('"')[0]        
+        # give values back as tuple
+        return start_time, end_time
+        
     def _get_status(self):
         """
         Get status from Opsview Server

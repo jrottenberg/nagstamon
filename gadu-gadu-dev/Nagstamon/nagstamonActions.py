@@ -196,26 +196,10 @@ class Recheck(threading.Thread):
 
     def run(self):
         try:
-            # decision about host or service - they have different URLs
-            if self.service == None:
-                # host
-                # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-                html = self.server.FetchURL(self.server.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":self.host}), giveback="raw")
-                start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-                # fill and encode CGI data
-                cgi_data = urllib.urlencode({"cmd_typ":"96", "cmd_mod":"2", "host":self.host, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
-            else:
-                # service @ host
-                # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
-                html = self.server.FetchURL(self.server.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":self.host, "service":self.service}), giveback="raw")
-                start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-                # fill and encode CGI data
-                cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":self.host, "service":self.service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
-
-            # execute POST request
-            self.server.FetchURL(self.server.nagios_cgi_url + "/cmd.cgi", giveback="nothing", cgi_data=cgi_data)
-
+            self.server.set_recheck(self)
         except:
+            import sys, traceback
+            traceback.print_exc(file=sys.stdout)
             pass
         
 
@@ -328,27 +312,7 @@ class Acknowledge(threading.Thread):
         self.setDaemon(1)
 
     def run(self):
-        url = self.server.nagios_cgi_url + "/cmd.cgi"
-        # decision about host or service - they have different URLs
-        # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
-        if self.service == "":
-            # host
-            cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":self.host, "com_author":self.author, "com_data":self.comment, "btnSubmit":"Commit"})
-
-        else:
-            # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":self.host, "service":self.service, "com_author":self.author, "com_data":self.comment, "btnSubmit":"Commit"})
-
-        # running remote cgi command        
-        self.server.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
-
-        # acknowledge all services on a host
-        if self.acknowledge_all_services == True:
-            for s in self.all_services:
-                # service @ host
-                cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":self.host, "service":s, "com_author":self.author, "com_data":self.comment, "btnSubmit":"Commit"})
-                #running remote cgi command        
-                self.server.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+        self.server.set_acknowledge(self)
 
         
     def __del__(self):
@@ -369,34 +333,7 @@ class Downtime(threading.Thread):
         self.setDaemon(1)
 
     def run(self):
-        if self.server.type == "Opsview":
-            # get action url for opsview downtime form
-            if self.service == "":
-                # host
-                cgi_data = urllib.urlencode({"cmd_typ":"55", "host":self.host})
-            else:
-                # service
-                cgi_data = urllib.urlencode({"cmd_typ":"56", "host":self.host, "service":self.service})
-            url = self.server.nagios_cgi_url + "/cmd.cgi"
-            html = self.server.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-            # which opsview form action to call
-            action = html.split('" enctype="multipart/form-data">')[0].split('action="')[-1]
-            # this time cgi_data does not get encoded because it will be submitted via multipart
-            # to build value for hidden from field old cgi_data is used
-            cgi_data = { "from" : url + "?" + cgi_data, "comment": self.comment, "starttime": self.start_time, "endtime": self.end_time }
-            self.server.FetchURL(self.server.nagios_url + action, giveback="nothing", cgi_data=cgi_data)
-        else:
-            # decision about host or service - they have different URLs
-            if self.service == "":
-                # host
-                cgi_data = urllib.urlencode({"cmd_typ":"55","cmd_mod":"2","trigger":"0","childoptions":"0","host":self.host,"com_author":self.author,"com_data":self.comment,"fixed":self.fixed,"start_time":self.start_time,"end_time":self.end_time,"hours":self.hours,"minutes":self.minutes,"btnSubmit":"Commit"})
-            else:
-                # service @ host
-                cgi_data = urllib.urlencode({"cmd_typ":"56","cmd_mod":"2","trigger":"0","childoptions":"0","host":self.host,"service":self.service,"com_author":self.author,"com_data":self.comment,"fixed":self.fixed,"start_time":self.start_time,"end_time":self.end_time,"hours":self.hours,"minutes":self.minutes,"btnSubmit":"Commit"})
-            url = self.server.nagios_cgi_url + "/cmd.cgi"
-        
-            # running remote cgi command
-            self.server.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+        self.server.set_downtime(self)
             
 
     def __del__(self):
@@ -409,17 +346,7 @@ class Downtime(threading.Thread):
 def Downtime_get_start_end(server, host):
     # get start and end time from Nagios as HTML - the objectified HTML does not contain the form elements :-(
     # this used to happen in GUI.action_downtime_dialog_show but for a more strict separation it better stays here
-    html = server.FetchURL(server.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
-
-    if server.type == "Opsview":
-        start_time = html.split('name="starttime" value="')[1].split('"')[0]
-        end_time = html.split('name="endtime" value="')[1].split('"')[0]        
-    else:
-        start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-        end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
-        
-    # give values back as tuple
-    return start_time, end_time
+    return server.get_start_end(host)
         
 
 class CheckForNewVersion(threading.Thread):
