@@ -571,13 +571,7 @@ def OpenNagios(widget, server, output):
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    if server.type == "Centreon":
-        webbrowser.open(server.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(server.username) + "&password=" + MD5ify(server.password))
-    else:
-        webbrowser.open(server.nagios_url)
-    # debug
-    if str(output.conf.debug_mode) == "True":
-        print server.name, ":", "Open Nagios website", server.nagios_url        
+    server.open_nagios(output.conf.debug_mode)
 
 
 def OpenServices(widget, server, output):
@@ -585,16 +579,7 @@ def OpenServices(widget, server, output):
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    if server.type == "Centreon":
-        webbrowser.open(server.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(server.username) + "&password=" + MD5ify(server.password) + "&p=20202&o=svcpb")
-        # debug
-        if str(output.conf.debug_mode) == "True":
-            print server.name, ":", "Open hosts website", server.nagios_url + "/main.php?p=20202&o=svcpb"
-    else:
-        webbrowser.open(server.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
-        # debug
-        if str(output.conf.debug_mode) == "True":
-            print server.name, ":", "Open services website", server.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
+    server.open_services(output.conf.debug_mode)
  
    
 def OpenHosts(widget, server, output):
@@ -602,31 +587,13 @@ def OpenHosts(widget, server, output):
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    if server.type == "Centreon":
-        webbrowser.open(server.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(server.username) + "&password=" + MD5ify(server.password) + "&p=20103&o=hpb")
-        # debug
-        if str(output.conf.debug_mode) == "True":
-            print server.name, ":", "Open hosts website", server.nagios_url + "/main.php?p=20103&o=hpb"
-    else:
-        webbrowser.open(server.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
-        # debug
-        if str(output.conf.debug_mode) == "True":
-            print server.name, ":", "Open hosts website", server.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
+    server.open_hosts(output.conf.debug_mode)
 
     
 def TreeViewNagios(server, host, service):
     # if the clicked row does not contain a service it mus be a host, 
     # so the nagios query is different 
-    if service is None:
-        if server.type == "Centreon":
-            webbrowser.open(server.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(server.username) + "&password=" + MD5ify(server.password) + "&p=4&mode=0&svc_id=" + host)
-        else:
-            webbrowser.open(server.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host)
-    else:
-        if server.type == "Centreon":
-            webbrowser.open(server.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(server.username) + "&password=" + MD5ify(server.username) + "&p=4&mode=0&svc_id=" + host + ";" + service)
-        else:
-            webbrowser.open(server.nagios_cgi_url + "/extinfo.cgi?type=2&host=" + host + "&service=" + service)
+    server.open_tree_view(host, service)
 
         
 def TreeViewHTTP(host):

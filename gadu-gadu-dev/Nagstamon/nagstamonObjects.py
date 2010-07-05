@@ -7,6 +7,7 @@ import sys
 import socket
 import gc
 import copy
+import webbrowser
 
 try:
     import lxml.etree, lxml.objectify
@@ -120,6 +121,7 @@ class GenericServer(object):
     ]
     
     DISABLED_CONTROLS = []
+    URL_SERVICE_SEPARATOR = '&service='
    
     @classmethod
     def get_columns(cls, row):
@@ -170,6 +172,36 @@ class GenericServer(object):
         """
         del(self)
         
+    def format_item(self, host, service=None):
+        if service is None:
+            return host
+        return ''.join([host, self.URL_SERVICE_SEPARATOR, service])
+        
+    def open_tree_view(self, host, service=None):
+        item = self.format_item(host, service)
+        self._open_tree_view(item)
+
+    def _open_tree_view(self, item):
+        webbrowser.open('%s/extinfo.cgi?type=2&host=%s' % (self.nagios_cgi_url, item))
+        
+    def open_nagios(self, debug_mode):
+        webbrowser.open(self.nagios_url)
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open Nagios website", self.nagios_url        
+        
+    def open_services(self, debug_mode=False):
+        webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open services website", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
+            
+        
+    def open_hosts(self, debug_mode=False):
+        webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open hosts website", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
     
     def GetStatus(self):
         """
@@ -871,6 +903,32 @@ nagstamonActions.register_server(OpsviewServer)
 
 class CentreonServer(OpsviewServer): 
     TYPE = 'Centreon'
+    URL_SERVICE_SEPARATOR = ';'
+    
+    def _open_tree_view(self, item):
+        webbrowser.open('%s/main.php?autologin=1&useralias=%s&password=%s&p=4&mode=0&svc_id=%s' % \
+                        (self.nagios_url, nagstamonActions.MD5ify(self.username), nagstamonActions.MD5ify(self.password), item))
+        
+        
+    def open_nagios(self, debug_mode):
+        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open Nagios website", self.nagios_url        
+        
+        
+    def open_services(self, debug_mode=False):
+        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20202&o=svcpb")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20202&o=svcpb"
+        
+    def open_hosts(self, debug_mode=False):
+        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20103&o=hpb")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20103&o=hpb"
+        
 
 nagstamonActions.register_server(CentreonServer)
 
