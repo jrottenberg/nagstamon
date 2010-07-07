@@ -2057,12 +2057,14 @@ class NewServer(ServerDialogHelper):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            self.servers[new_server.name] = nagstamonActions.CreateServer(new_server, self.conf)
-            
-            if str(self.conf.servers[new_server.name].enabled) == "True":
-                # start new thread (should go to nagstamonActions!)
-                self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
-                self.servers[new_server.name].thread.start()        
+            created_server = nagstamonActions.CreateServer(new_server, self.conf)
+            if created_server is not None:
+                self.servers[new_server.name] = created_server 
+                
+                if str(self.conf.servers[new_server.name].enabled) == "True":
+                    # start new thread (should go to nagstamonActions!)
+                    self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
+                    self.servers[new_server.name].thread.start()        
                   
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView()
@@ -2242,12 +2244,14 @@ class EditServer(ServerDialogHelper):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            self.servers[new_server.name] = nagstamonActions.CreateServer(new_server, self.conf)
-            
-            if str(self.conf.servers[new_server.name].enabled) == "True":  
-                # start new thread (should go to nagstamonActions)
-                self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
-                self.servers[new_server.name].thread.start()   
+            created_server = nagstamonActions.CreateServer(new_server, self.conf)
+            if created_server is not None:
+                self.servers[new_server.name] = created_server 
+                
+                if str(self.conf.servers[new_server.name].enabled) == "True":  
+                    # start new thread (should go to nagstamonActions)
+                    self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
+                    self.servers[new_server.name].thread.start()   
             
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView()

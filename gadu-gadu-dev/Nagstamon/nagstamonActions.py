@@ -550,8 +550,11 @@ def get_registered_servers():
 
 def CreateServer(server=None, conf=None):
     # create Server from config
-    import nagstamonObjects # prevents cyclic import
-    nagiosserver = get_registered_servers()[server.type](conf=conf)
+    registered_servers = get_registered_servers()
+    if server.type not in registered_servers:
+        print 'Server type not supported: %s' % server.type
+        return
+    nagiosserver = registered_servers[server.type](conf=conf)
     nagiosserver.name = server.name
     nagiosserver.type = server.type
     nagiosserver.nagios_url = server.nagios_url
