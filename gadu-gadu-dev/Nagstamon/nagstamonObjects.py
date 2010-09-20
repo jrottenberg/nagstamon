@@ -399,7 +399,7 @@ class GenericServer(object):
         try:
             htobj = self.FetchURL(nagcgiurl_services)
 
-            for i in range(1, len(htobj.body.table[2].tr)):
+            for i in range(1, len(htobj.body.table[self.BODY_TABLE_INDEX].tr)):
                 try:
                     # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
                     if not htobj.body.table[self.BODY_TABLE_INDEX].tr[i].countchildren() == 1:
