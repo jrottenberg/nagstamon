@@ -39,27 +39,6 @@ import time
 
 import custom # used for initialization of custom components
 
-class Sorting(object):
-    """ Sorting persistence purpose class
-    Stores tuple pairs in form of:
-    (<column_id>, <gtk.SORT_ASCENDING|gtk.SORT_DESCENDING)
-    """
-    def __init__(self, sorting_tuple_list=[], max_remember=8):
-        self.sorting_tuple_list = sorting_tuple_list
-        self.max_remember = max_remember
-    
-    def iteritems(self):
-        for item in reversed(self.sorting_tuple_list):
-            yield item
-
-    def add(self, id, order):
-        length = len(self.sorting_tuple_list)
-        if length > 0:
-            if length >= self.max_remember:
-                self.sorting_tuple_list.pop()
-            if id == self.sorting_tuple_list[0][0]:
-                self.sorting_tuple_list.remove(self.sorting_tuple_list[0])
-        self.sorting_tuple_list.insert(0, (id, order))
 
 class GUI(object):
     """
@@ -120,32 +99,6 @@ class GUI(object):
         # flag if about box is shown
         self.AboutDialogOpen = False
         
-        # saving sorting state between refresh
-        self.rows_reordered_handler = {} 
-        self.last_sorting = {}
-        for server in self.servers.values():
-            self.last_sorting[server.get_name()] = Sorting([(server.DEFAULT_SORT_COLUMN_ID, gtk.SORT_ASCENDING),
-                                                      (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
-                                                      len(server.COLUMNS)+1) # stores sorting between table refresh
-    
-    def get_last_sorting(self, server):
-        return self.last_sorting[server.get_name()]
-    
-    def get_rows_reordered_handler(self, server):
-        return self.rows_reordered_handler.get(server.get_name())
-    
-    def set_rows_reordered_handler(self, server, handler):
-        self.rows_reordered_handler[server.get_name()] = handler
-     
-    def set_sorting(self, liststore, server):
-        """ Restores sorting after refresh """
-        for id, order in self.get_last_sorting(server).iteritems():
-            liststore.set_sort_column_id(id, order)
-            # this makes sorting arrows visible according to
-            # sort order after refresh
-            #column = self.popwin.ServerVBoxes[server.get_name()].TreeView.get_column(id)
-            #if column is not None:
-            #    column.set_property('sort-order', order)
 
     def on_column_header_click(self, model, id, liststore, server):
         """ Sets current sorting according to column id """
@@ -154,23 +107,7 @@ class GUI(object):
         order = model.get_sort_order()
         liststore.set_sort_column_id(id, order)
         
-        rows_reordered_handler = self.get_rows_reordered_handler(server)
-        if rows_reordered_handler is not None:
-            liststore.disconnect(rows_reordered_handler)
-            new_rows_reordered_handler = liststore.connect_after('rows-reordered', self.on_sorting_order_change, id, model, server)
-            self.set_rows_reordered_handler(server, new_rows_reordered_handler)
-        else:
-            new_rows_reordered_handler = liststore.connect_after('rows-reordered', self.on_sorting_order_change, id, model, server, False)
-            self.set_rows_reordered_handler(server, new_rows_reordered_handler)
-            self.on_sorting_order_change(liststore, None, None, None, id, model, server)
         model.set_sort_column_id(id)
-
-    def on_sorting_order_change(self, liststore, path, iter, new_order, id, model, server, do_action=True):
-        """ Saves current sorting change in object property """
-        if do_action:
-            order = model.get_sort_order()
-            last_sorting = self.get_last_sorting(server)
-            last_sorting.add(id, order)
 
             
     def CreateOutputVisuals(self):
@@ -321,9 +258,6 @@ class GUI(object):
                         
                         # give new ListStore to the view, overwrites the old one automatically - theoretically
                         server.TreeView.set_model(server.ListStore)
-
-                        # restore sorting order from previous refresh
-                        self.set_sorting(server.ListStore, server)
                         
                         # status field in server vbox in popwin    
                         self.popwin.UpdateStatus(server)
@@ -1641,6 +1575,8 @@ class ServerVBox(gtk.VBox):
         # the whole TreeView memory leaky complex...  
         self.TreeView = self.server.TreeView
         self.ListStore = self.server.ListStore
+        self.ListStore.set_sort_column_id(self.server.DEFAULT_SORT_COLUMN_ID, gtk.SORT_ASCENDING)
+        self.ListStore.set_sort_column_id(self.server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)
      
         self.add(self.TreeView)
                 
