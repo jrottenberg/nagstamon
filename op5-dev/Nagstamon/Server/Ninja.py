@@ -180,7 +180,7 @@ class NinjaServer(GenericServer):
             self._init_HTTP()
 
         if mode == "commit" and not values:
-            return
+            return False
 
         # Lets send the commit string
         if mode == "commit":
