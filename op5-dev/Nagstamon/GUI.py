@@ -115,7 +115,7 @@ class GUI(object):
         self.popwin.Resize()
         
         # define colors for detailed status table in dictionaries
-        self.tab_bg_colors = { "UNKNOWN":"orange", "CRITICAL":"red", "WARNING":"yellow", "DOWN":"black", "UNREACHABLE":"darkred"  }
+        self.tab_bg_colors = { "UNKNOWN":"orange", "CRITICAL":"#E01806", "WARNING":"#FED306", "DOWN":"black", "UNREACHABLE":"darkred"  }
         self.tab_fg_colors = { "UNKNOWN":"black", "CRITICAL":"white", "WARNING":"black", "DOWN":"white", "UNREACHABLE":"white" }
     
         # flag which is set True if already notifying
@@ -372,16 +372,16 @@ class GUI(object):
                 self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="darkred"> ' % (self.fontsize) + str(unreachables) + ' </span>'
             if criticals > 0:
                 if str(self.conf.long_display) == "True": criticals = str(criticals) + " CRITICAL"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="red" foreground="white"> ' % (self.fontsize) + str(criticals) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="red"> ' % (self.fontsize) + str(criticals) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="#E01806" foreground="white"> ' % (self.fontsize) + str(criticals) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="#E01806"> ' % (self.fontsize) + str(criticals) + ' </span>'
             if unknowns > 0:
                 if str(self.conf.long_display) == "True": unknowns = str(unknowns) + " UNKNOWN"
                 self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="orange" foreground="black"> ' % (self.fontsize) + str(unknowns) + ' </span>'
                 self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="orange"> ' % (self.fontsize) + str(unknowns) + ' </span>'
             if warnings > 0:
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="yellow" foreground="black"> ' % (self.fontsize) + str(warnings) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="yellow"> ' % (self.fontsize) + str(warnings) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="#FED306" foreground="black"> ' % (self.fontsize) + str(warnings) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="#FED306"> ' % (self.fontsize) + str(warnings) + ' </span>'
 
             # put text into label in statusbar, only if not already flashing
             if self.statusbar.Flashing == False:
