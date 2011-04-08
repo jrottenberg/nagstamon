@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-from Nagstamon.Server.Generic import GenericServer
-
 import sys
 import urllib2
 import webbrowser
@@ -15,10 +13,10 @@ import cookielib
 #from urllib2 import urlopen, Request, build_opener, HTTPCookieProcessor, install_opener
 from Nagstamon import Actions
 from Nagstamon.Objects import *
-from Nagstamon.Server.Generic import GenericServer
+from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer, not_empty
 
 
-class NinjaServer(GenericServer):
+class NinjaServer(LxmlFreeGenericServer):
     """
         Ninja plugin for Nagstamon
     """
@@ -36,7 +34,7 @@ class NinjaServer(GenericServer):
 
     def init_HTTP(self):
         # add default auth for monitor.old 
-        GenericServer.init_HTTP(self)
+        LxmlFreeGenericServer.init_HTTP(self)
 
         # self.Cookie is a CookieJar which is a list of cookies - if 0 then emtpy
         if len(self.Cookie) == 0: 
@@ -158,6 +156,7 @@ class NinjaServer(GenericServer):
         """
         Get status from Ninja Server
         """
+
         # create Ninja items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
@@ -181,30 +180,32 @@ class NinjaServer(GenericServer):
 
         # Hosts
         try:
-            result = self.FetchURL(nagiosurl_hosts, remove_tags=["li", "ul", "img", "script", "link", "p", "br", "div", "form", "tbody", "span", "em"])
+            result = self.FetchURL(nagiosurl_hosts)
 
             htobj, error = result.result, result.error
-            table = htobj.xpath("//table[@id='host_table']")[0]
+            table = htobj.find('table', {'id': 'host_table'})
+            trs = table.findAll('tr')
+            trs.pop(0)
 
-            for i in range(1, len(table.tr)):
+            for tr in table('tr'):
                 try:
                     # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
+                    tds = tr('td')
+                    if len(tds) > 1:
                         n = {}
                         # host
                         try:
-#                            print [x.text for x in table.tr[i].td]
-                            n["host"] = table.tr[i].td[2].text.strip().split("\n")
-                            n["host_args"] = self.calc_current_state(int(n["host"][2].strip()))
+                            n["host"] = tds[2](text=not_empty)
+                            n["host_args"] = self.calc_current_state(int(n["host"][1].strip()))
                             if not n["host_args"]:
                                 n["host_args"] = False
 
-                            n["host"] = n["host"][0]
-                            n["status"] = str(table.tr[i].td[0].text.strip())
-                            n["last_check"] = str(table.tr[i].td[5].text.strip())
-                            n["duration"] = str(table.tr[i].td[6].text.strip())
+                            n["host"] = n["host"][0].strip()
+                            n["status"] = str(tds[0](text=not_empty)[0].strip())
+                            n["last_check"] = str(tds[5](text=not_empty)[0].strip())
+                            n["duration"] = str(tds[6](text=not_empty)[0].strip())
                             n["attempt"] = "N/A"
-                            n["status_information"] = str(table.tr[i].td[7].text.strip())
+                            n["status_information"] = str(tds[7](text=not_empty)[0].strip())
 
                             #print "Host: " + n["host"] + ", Args: " + str(n["host_args"]) + ", " + str(n["host_args"])
 
@@ -245,32 +246,33 @@ class NinjaServer(GenericServer):
 
         # Services
         try:
-            result = self.FetchURL(nagiosurl_services, remove_tags=["li", "ul", "img", "script", "link", "p", "br", "div", "form", "tbody", "span", "em"])
+            result = self.FetchURL(nagiosurl_services)
 
             htobj, error = result.result, result.error
-            table = htobj.xpath("//table[@id='service_table']")[0]
+            table = htobj.find('table', {'id': 'service_table'})
+            trs = table('tr')
+            trs.pop(0)
             lasthost = ""
 
-            for i in range(1, len(table.tr)):
+            for tr in trs:
                 try:
                     # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
+                    tds = tr('td')
+                    if len(tds) > 1:
                         n = {}
                         # host
                         #print [x.text for x in table.tr[i].td]
                         try:
-                            n["host"] = table.tr[i].td[1].xpath("text()")
+                            n["host"] = tds[1](text=not_empty)[0]
                             if n["host"]:
-                                n["host"] = n["host"][0].strip().split("\n")
-                                n["host"] = str(n["host"][0])
                                 lasthost = n["host"]
                             else:
-                                n["host"] = str(lasthost)
+                                n["host"] = lasthost
                         except:
-                            n["host"] = str(lasthost)
+                            n["host"] = lasthost
 
-                        n["status"] = str(table.tr[i].td[2].text.strip())
-                        n["service"] = table.tr[i].td[4].text.strip().split("\n")
+                        n["status"] = str(tds[2](text=not_empty)[0].strip())
+                        n["service"] = tds[4](text=not_empty)
                         i = 1
                         for i in range(len(n["service"])):
                             if n["service"][i]:
@@ -283,10 +285,10 @@ class NinjaServer(GenericServer):
                             n["service_args"] = False
 
                         n["service"] = str(n["service"][0])
-                        n["last_check"] = str(table.tr[i].td[6].text.strip())
-                        n["duration"] = str(table.tr[i].td[7].text.strip())
-                        n["attempt"] = str(table.tr[i].td[8].text.strip())
-                        n["status_information"] = str(table.tr[i].td[9].text.strip())
+                        n["last_check"] = str(tds[6](text=not_empty)[0].strip())
+                        n["duration"] = str(tds[7](text=not_empty)[0].strip())
+                        n["attempt"] = str(tds[8](text=not_empty)[0].strip())
+                        n["status_information"] = str(tds[9](text=not_empty)[0].strip())
 
                         # Add some logic here for parsing out the icons so we know state of the service
                         if n["service_args"]:

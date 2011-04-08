@@ -1539,11 +1539,11 @@ class Popwin(gtk.Window):
             open Nagios webseite from selected server
         """
         try:
-            active = widget.get_active()
+            active = widget.get_active_iter()
             model = widget.get_model()
             Actions.OpenNagios(widget=None, server=self.output.servers[model.get_value(active, 0)], output=self.output)
         except:
-            self.output.servers.values[0].Error(sys.exc_info())
+            self.output.servers.values()[0].Error(sys.exc_info())
             
     
     def UpdateStatus(self, server):
