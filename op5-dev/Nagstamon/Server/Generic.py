@@ -33,6 +33,9 @@ except:
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
 from Nagstamon.Objects import *
 
+# fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
+socket.setdefaulttimeout(30)
+
 
 class GenericServer(object):
     """
@@ -210,23 +213,27 @@ class GenericServer(object):
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
                                          "com_data":comment, "btnSubmit":"Commit"})
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
             
         # if host is acknowledged and all services should be to or if a service is acknowledged
         # (and all other on this host too)
-        if service != "" or len(all_services) > 0:
+        if service != "":
             # service @ host
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
                                          "com_author":author, "com_data":comment, "btnSubmit":"Commit"})          
-        # running remote cgi command        
-        self.FetchURL(url, giveback="raw", cgi_data=cgi_data)        
+            # running remote cgi command        
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
 
         # acknowledge all services on a host
-        for s in all_services:
-            # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
-            #running remote cgi command        
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        if len(all_services) > 0:
+            for s in all_services:
+                # service @ host
+                cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s,\
+                                             "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
+                                             "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+                #running remote cgi command        
+                self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
             
     
     def set_downtime(self, thread_obj):
@@ -378,7 +385,8 @@ class GenericServer(object):
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
                 table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
-            except:
+            except Exception, err:
+                print err
                 table = copy.deepcopy(htobj.body.embed.table)
             
             # do some cleanup    
@@ -391,7 +399,9 @@ class GenericServer(object):
                         n = {}
                         # host
                         try:
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.text)
+                            
                         except:
                             n["host"] = str(nagitems[len(nagitems)-1]["host"])
                         # status
@@ -400,10 +410,21 @@ class GenericServer(object):
                         n["last_check"] = str(table.tr[i].td[2].text)
                         # duration
                         n["duration"] = str(table.tr[i].td[3].text)
-                        # status_information
-                        n["status_information"] = str(table.tr[i].td[4].text)
-                        # attempts are not shown in case of hosts so it defaults to "N/A"
-                        n["attempt"] = "N/A"
+                        # division between Nagios and Icinga in real life... where
+                        # Nagios has only 5 columns there are 7 in Icinga 1.3...
+                        # ... and 6 in Icinga 1.2 :-)
+                        if len(table.tr[i].td) < 7:
+                            # the old Nagios table
+                            # status_information
+                            n["status_information"] = str(table.tr[i].td[4].text)
+                            # attempts are not shown in case of hosts so it defaults to "N/A"
+                            n["attempt"] = "N/A"
+                        else:
+                            # attempts are shown for hosts
+                            n["attempt"] = str(table.tr[i].td[4].text)
+                            # status_information
+                            n["status_information"] = str(table.tr[i].td[5].text)
+
                         
                         # add dictionary full of information about this host item to nagitems
                         nagitems["hosts"].append(n)
@@ -453,11 +474,13 @@ class GenericServer(object):
                         # so if the hostname is empty the nagios status item should get
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.text)        
                         except:
                             n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
                         # service
-                        n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.text)
+                        #n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.text)
+                        n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.text)
                         # status
                         n["status"] = str(table.tr[i].td[2].text)
                         # last_check
@@ -537,7 +560,8 @@ class GenericServer(object):
                     if not table.tr[i].countchildren() == 1:
                         # host
                         try:
-                            self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
+                            #self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
+                            self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.text))
                             # get real status of maintained host
                             if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
                                 self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(table.tr[i].td[1].text)
@@ -576,8 +600,8 @@ class GenericServer(object):
                     if not table.tr[i].countchildren() == 1:
                         # host
                         try:
-                            self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            # get real status of acknowledged host
+                            #self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
+                            self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.text))                            # get real status of acknowledged host
                             if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
                                 self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
                         except:
@@ -766,6 +790,10 @@ class GenericServer(object):
 
         try:
             try:
+                # debug
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
+                    
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
                 urlcontent = self.urlopener.open(request)
                 # use opener - if cgi_data is not empty urllib uses a POST request
@@ -791,8 +819,15 @@ class GenericServer(object):
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
                 prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
                 del html
+                # patch for passive checks, identified in Nagios and Icinga by icon
                 prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/([a-z]+)\.gif\"[^>]+>", "[[\\1]]", prettyhtml)
-                
+                # remove <a> tags to avoid not-shown-links in status information
+                # when removing </a> it is also necessary to remove &nbsp; because
+                # it might be added to hostname
+                prettyhtml = re.sub(r'(?i)<a .*=".*">', '', prettyhtml)
+                prettyhtml = re.sub(r'(?i)</a>', '', prettyhtml)
+                prettyhtml = re.sub(r'(?i)&nbsp;|&#160;', '', prettyhtml)
+
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
                 if sys.modules.has_key("lxml.html.clean"):
@@ -855,15 +890,10 @@ class GenericServer(object):
 
         try:
             # take ip from object path
-            if self.type == "Opsview":
-                # Opsview puts a lot of Javascript into HTML page so the wanted
-                # information table is embedded in another DIV
-                ip = str(htobj.body.div[3].table.tr.td[1].getchildren()[-2])
-            else:
-                ip = str(htobj.body.table.tr.td[1].div[5].text)
-                # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
-                if ip == "Member of":
-                    ip = str(htobj.body.table.tr.td[1].div[7].text)
+            ip = str(htobj.body.table.tr.td[1].div[5].text)
+            # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
+            if ip == "Member of":
+                ip = str(htobj.body.table.tr.td[1].div[7].text)
 
             # workaround for URL-ified IP as described in SF bug 2967416
             # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370

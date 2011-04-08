@@ -163,6 +163,8 @@ class GenericService(GenericObject):
         self.passiveonly = False
         self.notifications = True
         self.flapping = False
+        self.acknowledged = False
+        self.scheduled_downtime = False
         
 
     def get_host_name(self):
@@ -194,7 +196,7 @@ class GenericService(GenericObject):
 
 class Result(object):
     """
-    multi purpose result object
+    multi purpose result object, used in Servers.Generic.FetchURL()
     """
     result = ""
     error = ""
