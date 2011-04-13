@@ -1,19 +1,9 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires gtk+ 2.12 -->
+  <!-- interface-requires gtk+ 2.6 -->
   <!-- interface-naming-policy toplevel-contextual -->
-  <object class="GtkAdjustment" id="adjustment1">
-    <property name="upper">100</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="adjustment2">
-    <property name="upper">100</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkDialog" id="downtime_dialog">
-    <property name="title" translatable="yes" context="yes">Downtime</property>
+    <property name="title" translatable="yes">Downtime</property>
     <property name="resizable">False</property>
     <property name="window_position">center-always</property>
     <property name="default_width">320</property>
@@ -36,7 +26,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Host:</property>
+                <property name="label" translatable="yes">Host:</property>
               </object>
             </child>
             <child>
@@ -45,7 +35,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Service:</property>
+                <property name="label" translatable="yes">Service:</property>
               </object>
               <packing>
                 <property name="top_attach">1</property>
@@ -58,7 +48,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Author:</property>
+                <property name="label" translatable="yes">Author:</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -71,7 +61,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Comment:</property>
+                <property name="label" translatable="yes">Comment:</property>
               </object>
               <packing>
                 <property name="top_attach">3</property>
@@ -84,7 +74,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Start time:</property>
+                <property name="label" translatable="yes">Start time:</property>
               </object>
               <packing>
                 <property name="top_attach">4</property>
@@ -97,7 +87,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">End time:</property>
+                <property name="label" translatable="yes">End time:</property>
               </object>
               <packing>
                 <property name="top_attach">5</property>
@@ -110,7 +100,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Type:</property>
+                <property name="label" translatable="yes">Type:</property>
               </object>
               <packing>
                 <property name="top_attach">6</property>
@@ -123,7 +113,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Duration:</property>
+                <property name="label" translatable="yes">Duration:</property>
               </object>
               <packing>
                 <property name="top_attach">7</property>
@@ -205,11 +195,11 @@
                 <property name="visible">True</property>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_type_fixed">
-                    <property name="label" translatable="yes" context="yes">Fixed</property>
+                    <property name="label" translatable="yes">Fixed</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="receives_default">False</property>
-                    <property name="draw_indicator">False</property>
+                    <property name="draw_indicator">True</property>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -217,11 +207,11 @@
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_type_flexible">
-                    <property name="label" translatable="yes" context="yes">Flexible</property>
+                    <property name="label" translatable="yes">Flexible</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="receives_default">False</property>
-                    <property name="draw_indicator">False</property>
+                    <property name="draw_indicator">True</property>
                     <property name="group">input_radiobutton_type_fixed</property>
                   </object>
                   <packing>
@@ -244,7 +234,7 @@
                     <property name="visible">True</property>
                     <property name="is_focus">True</property>
                     <property name="max_length">2</property>
-                    <property name="adjustment">adjustment1</property>
+                    <property name="adjustment">adjustment2</property>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -254,7 +244,7 @@
                   <object class="GtkLabel" id="label_duration_hour">
                     <property name="visible">True</property>
                     <property name="xalign">0</property>
-                    <property name="label" translatable="yes" context="yes">hours</property>
+                    <property name="label" translatable="yes">hours</property>
                   </object>
                   <packing>
                     <property name="position">1</property>
@@ -264,7 +254,7 @@
                   <object class="GtkSpinButton" id="input_spinbutton_duration_minutes">
                     <property name="visible">True</property>
                     <property name="max_length">2</property>
-                    <property name="adjustment">adjustment2</property>
+                    <property name="adjustment">adjustment1</property>
                   </object>
                   <packing>
                     <property name="position">2</property>
@@ -274,7 +264,7 @@
                   <object class="GtkLabel" id="label_duration_minutes">
                     <property name="visible">True</property>
                     <property name="xalign">0</property>
-                    <property name="label" translatable="yes" context="yes">minutes</property>
+                    <property name="label" translatable="yes">minutes</property>
                   </object>
                   <packing>
                     <property name="position">3</property>
@@ -299,7 +289,7 @@
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="button_ok">
-                <property name="label" translatable="yes" context="yes">OK</property>
+                <property name="label" translatable="yes">OK</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
@@ -314,7 +304,7 @@
             </child>
             <child>
               <object class="GtkButton" id="button_cancel">
-                <property name="label" translatable="yes" context="yes">Cancel</property>
+                <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
@@ -338,5 +328,15 @@
       <action-widget response="0">button_ok</action-widget>
       <action-widget response="0">button_cancel</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adjustment2">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
   </object>
 </interface>

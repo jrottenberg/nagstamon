@@ -24,7 +24,7 @@ if platform.system() != "Windows":
         print
         print err
         print
-        print "Could not load egg.trayicon, so you cannot put nagstamon into systray."
+        print "Could not load egg.trayicon, so you cannot put nagstamon statusbar into systray."
         print
 
 # needed for actions e.g. triggered by pressed buttons
@@ -76,9 +76,9 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.5-RC1"
-        self.website = "http://nagstamon.sourceforge.net/"
-        self.copyright = "©2008-2010 Henri Wahl\nh.wahl@ifw-dresden.de"
+        self.version = "0.9.5"
+        self.website = "http://nagstamon.ifw-dresden.de/"
+        self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
         
         # get resources directory from current directory - only if not being set before by pkg_resources
@@ -87,6 +87,7 @@ class GUI(object):
                 self.Resources = os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")
             else:
                 self.Resources = os.path.normcase(os.getcwd() + os.sep + "resources")
+
 
         # initialize overall status flag
         self.status_ok = True
@@ -113,15 +114,14 @@ class GUI(object):
         self.popwin.Resize()
         
         # define colors for detailed status table in dictionaries
-        self.tab_bg_colors = { "UNKNOWN":"#fd8f0c", "CRITICAL":"#E01806", "WARNING":"#FED306", "DOWN":"black", "UNREACHABLE":"darkred"  }
-        self.tab_fg_colors = { "UNKNOWN":"black", "CRITICAL":"white", "WARNING":"black", "DOWN":"white", "UNREACHABLE":"white" }
+        self.tab_bg_colors = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
+        self.tab_fg_colors = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
     
         # flag which is set True if already notifying
         self.Notifying = False
         
         # flag if settings dialog is already open to omit various open settings dialogs after systray icon context menu click
-        self.SettingsDialogOpen = False
-        
+        self.SettingsDialogOpen = False       
         # flag if about box is shown
         self.AboutDialogOpen = False
         
@@ -189,7 +189,7 @@ class GUI(object):
             self.BitmapSuffix = ".png"
         else:
             self.BitmapSuffix = ".svg"
-
+            
         # set app icon for all app windows
         gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
         
@@ -207,7 +207,7 @@ class GUI(object):
             x,y = self.statusbar.HBox.size_request()
             self.statusbar.StatusBar.resize(x, y)
             
-        # connect events to actions                 host = self.miserable_server.GetHost(s
+        # connect events to actions                
         # when talking about "systray" the Windows variant of upper left desktop corner
         # statusbar is meant synonymical
         # if pointer on systray do popup the long-summary-status-window aka popwin
@@ -244,6 +244,10 @@ class GUI(object):
         # server combobox 
         self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
 
+        # attempt to place and resize statusbar where it belongs to in Windows - workaround
+        self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+        self.statusbar.Resize()
+        
 
     def RefreshDisplayStatus(self):
         """
@@ -265,9 +269,10 @@ class GUI(object):
         unreachables = 0
         unknowns = 0
         criticals = 0
-        warnings = 0    
-        errors = ''
-
+        warnings = 0
+        # display "ERROR" in case of startup connection trouble
+        errors = ""
+        
         # walk through all servers, their hosts and their services
         for server in self.servers.values():
             # only refresh monitor server output if enabled and only once every server loop
@@ -339,10 +344,10 @@ class GUI(object):
         self.popwin.VBox.hide_all()
         self.popwin.VBox.show_all()
         self.popwin.Resize()
-
+        
         # everything OK
         if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
-            self.statusbar.statusbar_labeltext = '<span size="%s" background="darkgreen" foreground="white"> OK </span>' % (self.fontsize)
+            self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_ok_background) + '" foreground="' + str(self.conf.color_ok_text) + '"> OK </span>'
             self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext
             self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
             # fix size when loading with network errors
@@ -363,35 +368,35 @@ class GUI(object):
             
             if downs > 0:
                 if str(self.conf.long_display) == "True": downs = str(downs) + " DOWN"
-                self.statusbar.statusbar_labeltext = '<span size="%s" background="black" foreground="white"> ' % (self.fontsize) + str(downs) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = '<span size="%s" background="white" foreground="black"> ' % (self.fontsize) + str(downs) + ' </span>'
+                self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_down_background) + '" foreground="' + str(self.conf.color_down_text) + '"> ' + str(downs) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_down_text) + '" foreground="' + str(self.conf.color_down_background) + '"> ' + str(downs) + ' </span>'
             if unreachables > 0:
                 if str(self.conf.long_display) == "True": unreachables = str(unreachables) + " UNREACHABLE"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="darkred" foreground="white"> ' % (self.fontsize) + str(unreachables) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="darkred"> ' % (self.fontsize) + str(unreachables) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unreachable_background) + '" foreground="' + str(self.conf.color_unreachable_text) + '"> ' + str(unreachables) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unreachable_text) + '" foreground="' + str(self.conf.color_unreachable_background) + '"> ' + str(unreachables) + ' </span>'
             if criticals > 0:
                 if str(self.conf.long_display) == "True": criticals = str(criticals) + " CRITICAL"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="#E01806" foreground="white"> ' % (self.fontsize) + str(criticals) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="#E01806"> ' % (self.fontsize) + str(criticals) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_critical_background) + '" foreground="' + str(self.conf.color_critical_text) + '"> ' + str(criticals) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_critical_text) + '" foreground="' + str(self.conf.color_critical_background) + '"> ' + str(criticals) + ' </span>'
             if unknowns > 0:
                 if str(self.conf.long_display) == "True": unknowns = str(unknowns) + " UNKNOWN"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="#fd8f0c" foreground="black"> ' % (self.fontsize) + str(unknowns) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="#fd8f0c"> ' % (self.fontsize) + str(unknowns) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unknown_background) + '" foreground="' + str(self.conf.color_unknown_text) + '"> ' + str(unknowns) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unknown_text) + '" foreground="' + str(self.conf.color_unknown_background) + '"> ' + str(unknowns) + ' </span>'
             if warnings > 0:
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="#FED306" foreground="black"> ' % (self.fontsize) + str(warnings) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="#FED306"> ' % (self.fontsize) + str(warnings) + ' </span>'
-
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_background) + '" foreground="' + str(self.conf.color_warning_text) + '"> ' + str(warnings) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_text) + '" foreground="' + str(self.conf.color_warning_background) + '"> ' + str(warnings) + ' </span>'               
+            
+            # if connections fails at starting do not display OK - Debian bug #617490
             if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
                 if str(self.conf.long_display) == "True":
                     errors = "ERROR"
                 else:
                     errors = "ERR"
-
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="blue" foreground="white"> ' % (self.fontsize) + str(errors) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="blue"> ' % (self.fontsize) + str(errors) + ' </span>'
-                color = "error"
-
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_background) + '" foreground="' + str(self.conf.color_error_text) + '"> ' + str(errors) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_text) + '" foreground="' + str(self.conf.color_error_background) + '"> ' + str(errors) + ' </span>'
+                color = "error"     
+                
             # put text into label in statusbar, only if not already flashing
             if self.statusbar.Flashing == False:
                 self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
@@ -408,7 +413,7 @@ class GUI(object):
             if downs > 0: color = "black"
 
             # should be solved somehow differently
-            self.statusbar.SysTray.set_from_file(self.Resources + os.sep + "nagstamon_" + color + self.BitmapSuffix)
+            self.statusbar.SysTray.set_from_file(self.Resources + os.sep +"nagstamon_" + color + self.BitmapSuffix)
             
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -487,6 +492,7 @@ class GUI(object):
         self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
         self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
 
+
         # show dialog
         self.acknowledge_dialog.run()
         self.acknowledge_dialog.destroy()
@@ -531,7 +537,7 @@ class GUI(object):
         self.downtime_xml = gtk.Builder()
         self.downtime_xml.add_from_file(self.builderfile)
         self.downtime_dialog = self.downtime_xml.get_object("downtime_dialog")
-
+        
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
         # use connect_signals to assign methods to handlers
@@ -605,17 +611,29 @@ class GUI(object):
         about.set_website(self.website)
         about.set_copyright(self.copyright)
         about.set_comments(self.comments)
-        about.set_authors(["In alphabetical order:",\
+        about.set_authors(["Henri Wahl",\
+                           " ",\
+                           "Thank you very much for code",\
+                           "contributions, patches, packaging,",\
+                           "testing, hints and ideas:",\
+                           " ",\
+                           "Antoine Jacoutot",\
                            "Benoît Soenen",\
                            "Carl Chenet",\
                            "Emile Heitor ",\
-                           "Henri Wahl",\
                            "John Conroy",\
+                           "Lars Michelsen",\
+                           "Mattias Ryrlén",\
                            "Michał Rzeszut",\
                            "Patrick Cernko",\
                            "Pawel Połewicz",\
+                           "Robin Sonefors",\
+                           "Sandro Tosi",\
+                           "Thomas Gelf",\
                            "Tobias Scheerbaum",\
-                           "...and many more!"])
+                           "Yannick Charton",\
+                           " ",\
+                           "...and those I forgot to mention but who helped a lot..."])
         # read LICENSE file
         license = ""
         try:
@@ -743,34 +761,17 @@ class StatusBar(object):
         
         # TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
         if platform.system() == "Windows":
-            #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-            self.StatusBar.set_decorated(False)
-            self.StatusBar.set_keep_above(True)
-            self.StatusBar.stick()
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
-            self.StatusBar.set_property("skip_taskbar_hint", True)
+            self._CreateFloatingStatusbar()
         else:
             if str(self.conf.statusbar_systray) == "True":
                 try:
                     self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
                 except:
                     print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
-                    #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-                    self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-                    self.StatusBar.set_decorated(False)
-                    self.StatusBar.stick()
-                    self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
-                    self.StatusBar.set_keep_above(True)
+                    self._CreateFloatingStatusbar()
             else:
-                #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-                self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-                self.StatusBar.set_decorated(False)
-                self.StatusBar.set_keep_above(True)
-                self.StatusBar.stick()
-                self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
-                self.StatusBar.set_property("skip_taskbar_hint", True)
-        
+                self._CreateFloatingStatusbar()
+                
         # image for logo in statusbar
         self.nagstamonLogo = gtk.Image()
         self.nagstamonLogo.set_from_file(self.output.Resources + os.sep + "nagstamon_small" + self.output.BitmapSuffix)
@@ -802,18 +803,7 @@ class StatusBar(object):
             self.StatusBar.show_all()
         else:
             self.StatusBar.hide_all()
-
-        # submenu for menuitem "Monitor" in statusbar menu which contains all the known Nagios servers
-        # first get and sort servers
-        self.MonitorSubmenu = gtk.Menu()
-        submenu_items = list(self.output.servers)
-        submenu_items.sort(key=str.lower)
-        for i in submenu_items:
-            menu_item = gtk.MenuItem(i)
-            menu_item.connect("activate", self.MenuResponseMonitors, i)
-            self.MonitorSubmenu.add(menu_item)
-        self.MonitorSubmenu.show_all()
-
+        
         # Popup menu for statusbar
         self.Menu = gtk.Menu()
         for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
@@ -833,6 +823,10 @@ class StatusBar(object):
                     menu_item.connect("activate", self.MenuResponse, i)
                     self.Menu.append(menu_item)
         self.Menu.show_all()
+        
+        # due to different GTK versions on different OS with different capabilities those 
+        # flags are used instead of for example gtk.Menu.get_visible()
+        self.MenuOpen = False
         
         # put Systray icon into statusbar object
         self.SysTray = gtk.StatusIcon()
@@ -858,7 +852,28 @@ class StatusBar(object):
         except:
             # in case of error define fixed fontsize
             self.output.fontsize = 10000
+            
 
+    def _CreateFloatingStatusbar(self):
+        """
+        create statusbar as floating window
+        """
+        # TOPLEVEL seems to be more standard compliant
+        #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        # WINDOWS_POPUP works
+        self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+        self.StatusBar.set_decorated(False)
+        self.StatusBar.set_keep_above(True)
+        self.StatusBar.stick()
+        # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
+        # there are some hint types to experiment with
+        if platform.system() == "Windows":
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        else:
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
+        self.StatusBar.set_property("skip-taskbar-hint", True)
+        self.StatusBar.set_skip_taskbar_hint(True)
+            
 
     def MenuResponseMonitors(self, widget, menu_entry):
         """
@@ -886,7 +901,7 @@ class StatusBar(object):
             see what happens if statusbar is clicked
         """
         # check if settings etc. are not already open
-        if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
+        if self.output.popwin.IsWanted() == True:
             # if left mousebutton is pressed
             if event.button == 1:
                 # if popping up on click is true...
@@ -906,7 +921,8 @@ class StatusBar(object):
             # if right mousebutton is pressed show statusbar menu
             if event.button == 3:
                 self.output.popwin.Close()
-                self.Menu.popup(None, None, None, event.button, event.time)
+                self.MenuPopup(widget=self.Menu, event=event)
+                #self.Menu.popup(None, None, None, event.button, event.time)
         
         # switch off Notification    
         self.output.NotificationOff()
@@ -950,7 +966,7 @@ class StatusBar(object):
         # switch notification off
         self.output.NotificationOff()
         # check if settings ar not already open
-        if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
+        if self.output.popwin.IsWanted() == True:
             # if popwin is not shown pop it up
             if self.output.popwin.get_properties("visible")[0] == False:
                 self.output.popwin.PopUp()
@@ -963,8 +979,8 @@ class StatusBar(object):
             see what happens if statusbar is hovered
         """
         # check if settings ar not already open
-        if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
-            if str(self.conf.popup_details_hover) == "True":
+        if self.output.popwin.IsWanted() == True and\
+           str(self.conf.popup_details_hover) == "True":
                 self.output.popwin.PopUp()
            
 
@@ -972,29 +988,32 @@ class StatusBar(object):
         """
             context menu for label in statusbar
         """
+        
         self.output.popwin.Close()
-        
-        # for some reason StatusIcon delivers another event (type int) than
-        # egg.trayicon (type object) so it must be checked which one has
-        # been calling
-        # to make it even worse there are different integer types given back
-        # in Windows and Unix
-        # systray icon
-        
+
         # check if settings ar not already open
         if self.output.SettingsDialogOpen == False:
+            # for some reason StatusIcon delivers another event (type int) than
+            # egg.trayicon (type object) so it must be checked which one has
+            # been calling
+            # to make it even worse there are different integer types given back
+            # in Windows and Unix
             if isinstance(event, int) or isinstance(event, long):
                 # right button
                 if event == 3:
                     # 'time' is important (wherever it comes from) for Linux/Gtk to let
                     # the popup be shown even after releasing the mouse button
-                    self.Menu.popup(None, None, None, event, time)
+                    self.Menu.popup(None, None, None, event, time)                          
+                    self.MenuOpen = True
             else:
                 # right button
                 if event.button == 3:
                     widget.popup(None, None, None, event.button, event.time)
-
-    
+                    self.MenuOpen = True
+                    
+            self.MenuOpen = False
+           
+                    
     def Move(self, widget, event):
         """
             moving statusbar
@@ -1055,7 +1074,7 @@ class StatusBar(object):
         try:
             x,y = self.Label.size_request()
             self.StatusBar.resize(x, y)
-        except:
+        except:   
             self.StatusBar.resize(1, 1)
 
 
@@ -1084,7 +1103,7 @@ class Popwin(gtk.Window):
         # put a name tag where there buttons had been before
         # image for logo in statusbar
         self.NagstamonLabel = gtk.Image()
-        self.NagstamonLabel.set_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
+        self.NagstamonLabel.set_from_file(self.output.Resources + os.sep + "nagstamon_label.png")     
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
         self.AlMonitorLabel.add(self.HBoxNagiosButtons)
         
@@ -1536,7 +1555,7 @@ class Popwin(gtk.Window):
 
     def ComboboxClicked(self, widget=None):
         """
-            open Nagios webseite from selected server
+            open web interface of selected server
         """
         try:
             active = widget.get_active_iter()
@@ -1555,6 +1574,19 @@ class Popwin(gtk.Window):
             self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span>Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description) + '</span></span>')
         except:
             server.Error(sys.exc_info())
+            
+    
+    def IsWanted(self):
+        """
+        check if no other dialog/menu is shown which would not like to be
+        covered by the popup window
+        """
+        if self.output.SettingsDialogOpen == False and\
+           self.output.AboutDialogOpen == False and\
+           self.output.statusbar.MenuOpen == False:
+            return True
+        else:
+            return False
     
 
 class ServerVBox(gtk.VBox):
@@ -1696,10 +1728,13 @@ class Settings(object):
                           "checkbutton_re_service_enabled": self.ToggleREServiceOptions,
                           "button_play_sound": self.PlaySound,
                           "checkbutton_debug_mode": self.ToggleDebugOptions,
-                          "checkbutton_debug_to_file": self.ToggleDebugOptions}
-        self.builder.connect_signals(handlers_dict)
-        
-        keys = self.conf.__dict__.keys()
+                          "checkbutton_debug_to_file": self.ToggleDebugOptions,
+                          "button_colors_default": self.ColorsDefault,
+                          "button_colors_reset": self.ColorsReset,
+                          "color-set": self.ColorsPreview}
+        self.builder.connect_signals(handlers_dict)      
+
+        keys = self.conf.__dict__.keys()        
         # walk through all relevant input types to fill dialog with existing settings
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]: 
             for key in keys:
@@ -1744,7 +1779,7 @@ class Settings(object):
         
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.builder.get_object("notebook")
-        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification"]
+        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Colors"]
         for c in notebook.get_children():
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
         
@@ -1773,15 +1808,19 @@ class Settings(object):
             filters["ogg"].add_pattern("*.OGG")
 
         for f in ["warning", "critical", "down"]:
-            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + f)
+            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + f)            
             for f in filters: filechooser.add_filter(filters[f])
             # for some reason does not show wanted effect
             filechooser.set_filter(filters["wav"])
         
         # in case nagstamon runs the first time it should display a new server dialog
         if str(self.conf.unconfigured) == "True":
+            self.output.statusbar.StatusBar.hide()
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
-           
+
+        # prepare colors and preview them
+        self.ColorsReset()              
+                
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()
@@ -1854,7 +1893,7 @@ class Settings(object):
             values of the config object
             after this the config file gets saved.
         """
-        keys = self.conf.__dict__.keys()
+        keys = self.conf.__dict__.keys()       
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
             for key in keys:
                 j = self.builder.get_object(i + key)
@@ -1876,16 +1915,22 @@ class Settings(object):
                                 self.conf.__dict__[key] = j.get_filename()
                             except:
                                 pass
-
+        
+        # evaluate and apply colors
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            self.conf.__dict__["color_" + state + "_text"] = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
+            self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()     
+                                                    
         # close settings dialog 
         self.dialog.destroy()
+        
         # close popwin
         # catch Exception at first run when there cannot exist a popwin
         try:
             self.output.popwin.hide_all()
         except:
-            pass
-
+            pass            
+     
         if int(self.conf.update_interval) == 0:
             self.conf.update_interval = 1
         
@@ -1904,6 +1949,9 @@ class Settings(object):
             self.output.popwin.destroy()
             # re-initialize output with new settings
             self.output.__init__()
+            # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
+            # this way it should be disciplined
+            self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
             
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
@@ -1927,7 +1975,45 @@ class Settings(object):
         # without settings there is not much nagstamon can do
         if self.output.firstrun == True:
             sys.exit()
-       
+            
+            
+    def ColorsPreview(self, widget=None):
+        """
+        preview for status information colors
+        """
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            text = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
+            background = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()
+            label = self.builder.get_object("label_color_" + state)
+            label.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
+                (text, background, state.upper()))
+            
+            
+    def ColorsDefault(self, widget=None):
+        """
+        reset default colors
+        """
+        # text and background colors of all states get set to defaults
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_text"]))     
+            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_background"]))     
+                    
+        # renew preview
+        self.ColorsPreview()
+        
+
+    def ColorsReset(self, widget=None):
+        """
+        reset to previous colors
+        """
+        # text and background colors of all states get set to defaults
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_text"]))     
+            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_background"]))                                   
+                
+        # renew preview
+        self.ColorsPreview()        
+                
             
     def DeleteServer(self, server=None):
         """
@@ -1999,8 +2085,8 @@ class Settings(object):
         """
             Disable notification sound when not using sound is enabled
         """
-        options = self.builder.get_object("table_notification_options_sound_options")
-        checkbutton = self.builder.get_object("input_checkbutton_notification_sound")
+        options = self.builder.get_object("table_notification_options")
+        checkbutton = self.builder.get_object("input_checkbutton_notification")
         options.set_sensitive(checkbutton.get_active())
 
 
@@ -2128,7 +2214,7 @@ class NewServer(ServerDialogHelper):
         # put changed data into new server, which will get into the servers dictionary after the old
         # one has been deleted
         new_server = Config.Server()
-
+        
         keys = new_server.__dict__.keys()
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
             for key in keys:
@@ -2154,7 +2240,7 @@ class NewServer(ServerDialogHelper):
         combobox = self.builder.get_object("input_combo_server_type")
         active = combobox.get_active_iter()
         model = combobox.get_model()
-        new_server.__dict__["type"] = model.get_value(active, 0)
+        new_server.__dict__["type"] = model.get_value(active, 0)                 
    
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
@@ -2163,7 +2249,7 @@ class NewServer(ServerDialogHelper):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            created_server = Actions.CreateServer(new_server, self.conf)
+            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
                 
@@ -2200,6 +2286,7 @@ class NewServer(ServerDialogHelper):
         item.set_sensitive( is_active )
         if not is_active:
             item.set_text("")
+            
     
     def ToggleProxy(self, widget=None):
         """
@@ -2214,8 +2301,7 @@ class NewServer(ServerDialogHelper):
     def ToggleProxyFromOS(self, widget=None):
         """
             toggle proxy from OS when using proxy is enabled
-        """
-        
+        """       
         checkbutton = self.builder.get_object("input_checkbutton_use_proxy_from_os")
         checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
 
@@ -2271,14 +2357,13 @@ class EditServer(ServerDialogHelper):
             # set title of settings dialog 
             self.dialog.set_title("Edit Server " + self.server)
             
-            keys = self.conf.servers[self.server].__dict__.keys()
+            keys = self.conf.servers[self.server].__dict__.keys()            
             # walk through all relevant input types to fill dialog with existing settings
             for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]: 
                 for key in keys:
                     j = self.builder.get_object(i + key)
                     if not j:
                         continue
-                    
                     # some hazard, every widget has other methods to fill it with desired content
                     # so we try them all, one of them should work
                     try:
@@ -2307,7 +2392,7 @@ class EditServer(ServerDialogHelper):
             combobox.set_attributes(cr, text=0)
             combobox.set_model(combomodel)
             for server in servers:
-                combomodel.append((server,))
+                combobox.append_text(server)
             combobox.set_active(server_types[self.conf.servers[self.server].type])
             
             combobox.connect('changed', self.on_server_change)
@@ -2356,7 +2441,7 @@ class EditServer(ServerDialogHelper):
         combobox = self.builder.get_object("input_combo_server_type")
         active = combobox.get_active_iter()
         model = combobox.get_model()
-        new_server.__dict__["type"] = model.get_value(active, 0)
+        new_server.__dict__["type"] = model.get_value(active, 0)   
         
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers and new_server.name != self.server:
@@ -2425,11 +2510,10 @@ class EditServer(ServerDialogHelper):
         """
             toggle proxy from OS when using proxy is enabled
         """
-        
         checkbutton = self.builder.get_object("input_checkbutton_use_proxy_from_os")
         checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
-
             
+        
     def ToggleProxyAddress(self, widget=None):
         """
             toggle proxy address options when not using proxy is enabled

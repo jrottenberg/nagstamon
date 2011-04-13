@@ -1,13 +1,15 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires gtk+ 2.12 -->
+  <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkDialog" id="settings_server_dialog">
-    <property name="title" translatable="yes" context="yes">Server settings</property>
+    <property name="title" translatable="yes">Server settings</property>
     <property name="resizable">False</property>
+    <property name="window_position">center-always</property>
     <property name="default_width">320</property>
     <property name="default_height">260</property>
-    <property name="type_hint">normal</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="type_hint">dialog</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog1-vbox">
         <property name="visible">True</property>
@@ -19,19 +21,19 @@
             <property name="n_columns">2</property>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_enabled">
-                <property name="label" translatable="yes" context="yes">Enabled</property>
+                <property name="label" translatable="yes">Enabled</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
               </object>
             </child>
             <child>
               <object class="GtkLabel" id="label_server_type">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Server type:</property>
+                <property name="label" translatable="yes">Server type:</property>
               </object>
               <packing>
                 <property name="top_attach">1</property>
@@ -42,7 +44,7 @@
               <object class="GtkLabel" id="label_name">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Server name:</property>
+                <property name="label" translatable="yes">Server name:</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -54,9 +56,8 @@
                 <property name="visible">True</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_markup">URL of Nagios Webseite in your LAN. HTTPS is preferred.</property>
-                <property name="tooltip_text" translatable="yes" context="yes">URL of Nagios Webseite in your LAN. HTTPS is preferred.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Server URL:</property>
+                <property name="label" translatable="yes">Server URL:</property>
               </object>
               <packing>
                 <property name="top_attach">3</property>
@@ -70,11 +71,8 @@
                 <property name="tooltip_markup">HTTP and HTTPS possible; e.g. &amp;quot;https://nagios-server/nagios/cgi-bin&amp;quot;.
 HTTPS is by all means the preferred because more secure option.
 Don&amp;apos;t put any status.cgi in there.</property>
-                <property name="tooltip_text" translatable="yes" context="yes">HTTP and HTTPS possible; e.g. "https://nagios-server/nagios/cgi-bin".
-HTTPS is by all means the preferred because more secure option.
-Don't put any status.cgi in there.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Server CGI URL:</property>
+                <property name="label" translatable="yes">Server CGI URL:</property>
               </object>
               <packing>
                 <property name="top_attach">4</property>
@@ -86,9 +84,8 @@ Don't put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_markup">Username of your Nagios website.</property>
-                <property name="tooltip_text" translatable="yes" context="yes">Username of your Nagios website.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Username:</property>
+                <property name="label" translatable="yes">Username:</property>
               </object>
               <packing>
                 <property name="top_attach">5</property>
@@ -97,12 +94,12 @@ Don't put any status.cgi in there.</property>
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_save_password">
-                <property name="label" translatable="yes" context="yes">Save Password</property>
+                <property name="label" translatable="yes">Save Password</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="toggle_save_password"/>
               </object>
               <packing>
@@ -115,9 +112,8 @@ Don't put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_markup">Password for your Nagios website.</property>
-                <property name="tooltip_text" translatable="yes" context="yes">Password for your Nagios website.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Password:</property>
+                <property name="label" translatable="yes">Password:</property>
               </object>
               <packing>
                 <property name="top_attach">7</property>
@@ -126,12 +122,12 @@ Don't put any status.cgi in there.</property>
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_use_proxy">
-                <property name="label" translatable="yes" context="yes">Use proxy</property>
+                <property name="label" translatable="yes">Use proxy</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="toggle_proxy"/>
               </object>
               <packing>
@@ -141,11 +137,11 @@ Don't put any status.cgi in there.</property>
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_use_proxy_from_os">
-                <property name="label" translatable="yes" context="yes">Use proxy from OS</property>
+                <property name="label" translatable="yes">Use proxy from OS</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="toggle_proxy"/>
               </object>
               <packing>
@@ -157,7 +153,7 @@ Don't put any status.cgi in there.</property>
               <object class="GtkLabel" id="label_proxy_address">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Proxy address:</property>
+                <property name="label" translatable="yes">Proxy address:</property>
                 <property name="width_chars">15</property>
               </object>
               <packing>
@@ -169,7 +165,7 @@ Don't put any status.cgi in there.</property>
               <object class="GtkLabel" id="label_proxy_username">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Username:</property>
+                <property name="label" translatable="yes">Username:</property>
                 <property name="width_chars">10</property>
               </object>
               <packing>
@@ -181,7 +177,7 @@ Don't put any status.cgi in there.</property>
               <object class="GtkLabel" id="label_proxy_password">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes" context="yes">Password:</property>
+                <property name="label" translatable="yes">Password:</property>
                 <property name="width_chars">10</property>
               </object>
               <packing>
@@ -192,6 +188,7 @@ Don't put any status.cgi in there.</property>
             <child>
               <object class="GtkComboBox" id="input_combo_server_type">
                 <property name="visible">True</property>
+                <property name="model">liststore1</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -205,7 +202,7 @@ Don't put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="is_focus">True</property>
                 <property name="width_chars">50</property>
-                <property name="text" translatable="yes" context="yes">Default</property>
+                <property name="text" translatable="yes">Default</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -218,7 +215,7 @@ Don't put any status.cgi in there.</property>
               <object class="GtkEntry" id="input_entry_nagios_url">
                 <property name="visible">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes" context="yes">https://nagios-server</property>
+                <property name="text" translatable="yes">https://nagios-server</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -231,7 +228,7 @@ Don't put any status.cgi in there.</property>
               <object class="GtkEntry" id="input_entry_nagios_cgi_url">
                 <property name="visible">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes" context="yes">https://nagios-server/nagios/cgi-bin</property>
+                <property name="text" translatable="yes">https://nagios-server/nagios/cgi-bin</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -244,7 +241,7 @@ Don't put any status.cgi in there.</property>
               <object class="GtkEntry" id="input_entry_username">
                 <property name="visible">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes" context="yes">nagiosuser</property>
+                <property name="text" translatable="yes">nagiosuser</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -258,7 +255,7 @@ Don't put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="is_focus">True</property>
                 <property name="visibility">False</property>
-                <property name="text" translatable="yes" context="yes">nagiospassword</property>
+                <property name="text" translatable="yes">nagiospassword</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -271,7 +268,7 @@ Don't put any status.cgi in there.</property>
               <object class="GtkEntry" id="input_entry_proxy_address">
                 <property name="visible">True</property>
                 <property name="width_chars">30</property>
-                <property name="text" translatable="yes" context="yes">http://proxy:port/</property>
+                <property name="text" translatable="yes">http://proxy:port/</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -285,7 +282,7 @@ Don't put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="is_focus">True</property>
                 <property name="width_chars">25</property>
-                <property name="text" translatable="yes" context="yes">proxyuser</property>
+                <property name="text" translatable="yes">proxyuser</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -300,7 +297,7 @@ Don't put any status.cgi in there.</property>
                 <property name="is_focus">True</property>
                 <property name="visibility">False</property>
                 <property name="width_chars">25</property>
-                <property name="text" translatable="yes" context="yes">proxypassword</property>
+                <property name="text" translatable="yes">proxypassword</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -344,7 +341,7 @@ Don't put any status.cgi in there.</property>
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="button_ok">
-                <property name="label" translatable="yes" context="yes">OK</property>
+                <property name="label" translatable="yes">OK</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
@@ -352,14 +349,12 @@ Don't put any status.cgi in there.</property>
                 <signal name="pressed" handler="button_ok_clicked"/>
               </object>
               <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
               <object class="GtkButton" id="button_cancel">
-                <property name="label" translatable="yes" context="yes">Cancel</property>
+                <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
@@ -367,8 +362,6 @@ Don't put any status.cgi in there.</property>
                 <signal name="pressed" handler="button_cancel_clicked"/>
               </object>
               <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -385,5 +378,11 @@ Don't put any status.cgi in there.</property>
       <action-widget response="0">button_ok</action-widget>
       <action-widget response="0">button_cancel</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkListStore" id="liststore1">
+    <columns>
+      <!-- column-name item text -->
+      <column type="gchararray"/>
+    </columns>
   </object>
 </interface>

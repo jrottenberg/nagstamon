@@ -204,6 +204,7 @@ class DebugLoop(threading.Thread):
         while self.stopped == False and str(self.conf.debug_mode) == "True":
             # .get() waits until there is something to get - needs timeout in case no debug messages fly in
             debug_string = ""
+            
             try:
                 debug_string = self.debug_queue.get(True, 1)
                 print debug_string
@@ -594,8 +595,11 @@ def CreateServer(server=None, conf=None, debug_queue=None):
         nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
         nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)   
 
+    # create permanent urlopener for server to avoid memory leak with millions of openers    
     nagiosserver.urlopener = BuildURLOpener(nagiosserver)        
-    nagiosserver.init_HTTP()    
+    # server's individual preparations for HTTP connections (for example cookie creation)
+    if server.enabled == True:
+        nagiosserver.init_HTTP()    
 
     # debug
     if str(conf.debug_mode) == "True":

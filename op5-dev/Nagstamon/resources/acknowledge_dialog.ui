@@ -1,9 +1,9 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires gtk+ 2.12 -->
+  <!-- interface-requires gtk+ 2.6 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkDialog" id="acknowledge_dialog">
-    <property name="title" translatable="yes" context="yes">Acknowledge</property>
+    <property name="title" translatable="yes">Acknowledge</property>
     <property name="resizable">False</property>
     <property name="window_position">center-always</property>
     <property name="default_width">320</property>
@@ -23,7 +23,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Host:</property>
+                <property name="label" translatable="yes">Host:</property>
               </object>
             </child>
             <child>
@@ -32,7 +32,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Service:</property>
+                <property name="label" translatable="yes">Service:</property>
               </object>
               <packing>
                 <property name="top_attach">1</property>
@@ -45,7 +45,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Options:</property>
+                <property name="label" translatable="yes">Options:</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -58,7 +58,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Author:</property>
+                <property name="label" translatable="yes">Author:</property>
               </object>
               <packing>
                 <property name="top_attach">6</property>
@@ -71,7 +71,7 @@
                 <property name="xalign">0</property>
                 <property name="xpad">3</property>
                 <property name="ypad">3</property>
-                <property name="label" translatable="yes" context="yes">Comment:</property>
+                <property name="label" translatable="yes">Comment:</property>
               </object>
               <packing>
                 <property name="top_attach">7</property>
@@ -106,13 +106,13 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_sticky_acknowledgement">
-                <property name="label" translatable="yes" context="yes">Sticky acknowledgement</property>
+                <property name="label" translatable="yes">Sticky acknowledgement</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -123,12 +123,12 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_send_notification">
-                <property name="label" translatable="yes" context="yes">Send notification</property>
+                <property name="label" translatable="yes">Send notification</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -139,12 +139,12 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_persistent_comment">
-                <property name="label" translatable="yes" context="yes">Persistent comment</property>
+                <property name="label" translatable="yes">Persistent comment</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -155,12 +155,12 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_acknowledge_all_services">
-                <property name="label" translatable="yes" context="yes">Acknowledge all services on host</property>
+                <property name="label" translatable="yes">Acknowledge all services on host</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
-                <property name="draw_indicator">False</property>
+                <property name="draw_indicator">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -212,7 +212,7 @@
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="button_">
-                <property name="label" translatable="yes" context="yes">OK</property>
+                <property name="label" translatable="yes">OK</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
@@ -227,7 +227,7 @@
             </child>
             <child>
               <object class="GtkButton" id="button_cance">
-                <property name="label" translatable="yes" context="yes">Cancel</property>
+                <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
