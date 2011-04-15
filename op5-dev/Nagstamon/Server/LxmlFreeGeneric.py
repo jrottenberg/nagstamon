@@ -39,7 +39,7 @@ class LxmlFreeGenericServer(GenericServer):
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
         else:
-            return GenericServer.FetchURL(self, url, giveback, cgi_data, remove_Tags)
+            return GenericServer.FetchURL(self, url, giveback, cgi_data, remove_tags)
     
     def _get_status(self):
         """

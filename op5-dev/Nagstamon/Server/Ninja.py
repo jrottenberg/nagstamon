@@ -28,9 +28,6 @@ class NinjaServer(LxmlFreeGenericServer):
     login_url = False
     time_url = False
 
-    # used in Nagios _get_status() method
-    HTML_BODY_TABLE_INDEX = 2
-    
 
     def init_HTTP(self):
         # add default auth for monitor.old 
@@ -51,7 +48,7 @@ class NinjaServer(LxmlFreeGenericServer):
 
             except:
                 self.Error(sys.exc_info())
-      
+
 
     def open_tree_view(self, host, service):
         if not service:
@@ -127,20 +124,37 @@ class NinjaServer(LxmlFreeGenericServer):
 
         self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
 
+    def get_start_end(self, host):
+        try:
+            content = self.FetchURL(self.time_url, giveback="raw").result
+            pos = content.find('<span id="page_last_updated">')
+            start_time = content[pos+len('<span id="page_last_updated">'):content.find('<', pos+1)]
+            if start_time:
+                magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
+                start_diff = datetime.timedelta(0, 10)
+                end_diff = datetime.timedelta(0, 7210)
+                start_time = magic_tuple + start_diff
+                end_time = magic_tuple + end_diff
+
+                return str(start_time), str(end_time)
+        except:
+            self.Error(sys.exc_info())
+            return "n/a", "n/a"
+
 
     def calc_current_state(self, n):
         ''' Return the current state of a host/service based on the value we parse from the page and run it into binary'''
         ''' Reference list
         1 = problem_has_been_acknowledged
         2 = notifications_enabled
-        4 = active_checks_enabled
+        4 = active_checks_disabled
         8 = scheduled_downtime_depth
         16 = host_down || host_unreachable || service_critical || service_unknown || service_warning
         32 = is_flapping
         '''
         state_list = [['problem_has_been_acknowledged', False],
          ['notifications_enabled', False],
-         ['active_checks_enabled', False],
+         ['active_checks_disabled', False],
          ['scheduled_downtime', False],
          ['has_problem', False],
          ['is_flapping', False]]
@@ -162,21 +176,8 @@ class NinjaServer(LxmlFreeGenericServer):
         # this dictionary is only temporarily
         nagitems = {"services":[], "hosts":[]}
 
-        # services (unknown, warning or critical?)
-        #nagiosurl_services = self.nagios_url + "/index.php/status/service/all?" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         nagiosurl_services = self.nagios_url + "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71"
-        #nagiosurl_services = self.nagios_url + "/index.php/status/service/all?servicestatustypes=74&serviceprops=2"
-        # hosts (up or down or unreachable)
-        #nagiosurl_hosts = self.nagios_url + "/index.php/status/host/all/0?hostprops=2" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
         nagiosurl_hosts = self.nagios_url + "/index.php/status/host/all/6"
-        # fetching hosts in downtime and acknowledged hosts at once is not possible because these 
-        # properties get added and nagios display ONLY hosts that have BOTH states
-        # hosts that are in scheduled downtime, we will later omit services on those hosts
-        # hostproperty 1 = HOST_SCHEDULED_DOWNTIME 
-        nagiosurl_hosts_in_maintenance = self.nagios_url + "/index.php/status/host/all?hostprops=1"
-        # hosts that are acknowledged, we will later omit services on those hosts
-        # hostproperty 4 = HOST_STATE_ACKNOWLEDGED 
-        nagiosurl_hosts_acknowledged = self.nagios_url + "/index.php/status/host/all?hostprops=4"
 
         # Hosts
         try:
@@ -222,14 +223,24 @@ class NinjaServer(LxmlFreeGenericServer):
                                 self.new_hosts[new_host].duration = n["duration"]
                                 self.new_hosts[new_host].attempt = n["attempt"]
                                 self.new_hosts[new_host].status_information= n["status_information"]
+                                self.new_hosts[new_host].visible = True
 
                                 if n["host_args"]:
                                     if n["host_args"]["scheduled_downtime"]:
-                                        self.new_hosts_in_maintenance.append(n["host"])
+                                        self.new_hosts[new_host].scheduled_downtime = True
 
                                     if n["host_args"]["problem_has_been_acknowledged"]:
-                                        self.new_hosts_acknowledged.append(n["host"])
+                                        self.new_hosts[new_host].acknowledged = True
 
+                                    if n["host_args"]["notifications_enabled"]:
+                                        self.new_hosts[new_host].notifications = False
+                                    else:
+                                        self.new_hosts[new_host].notifications = True
+
+                                    if n["host_args"]["active_checks_disabled"]:
+                                        self.new_hosts[new_host].passiveonly = True
+                                    else:
+                                        self.new_hosts[new_host].passiveonly = False
                         except:
                             n["host"] = str(nagitems[len(nagitems)-1]["host"])
                             print "Except: " + str(nagitems[len(nagitems)-1]["host"])
@@ -291,13 +302,14 @@ class NinjaServer(LxmlFreeGenericServer):
                         n["status_information"] = str(tds[9](text=not_empty)[0].strip())
 
                         # Add some logic here for parsing out the icons so we know state of the service
+                        #print str(n["service_args"])
                         if n["service_args"]:
-                            if not n["service_args"]["active_checks_enabled"]:
+                            if n["service_args"]["active_checks_disabled"] == True:
                                 n["passiveonly"] = True
                             else:
                                 n["passiveonly"] = False
 
-                            if not n["service_args"]["notifications_enabled"]:
+                            if n["service_args"]["notifications_enabled"]:
                                 n["notifications"] = False
                             else:
                                 n["notifications"] = True
@@ -312,6 +324,12 @@ class NinjaServer(LxmlFreeGenericServer):
                             else:
                                 n["acknowledged"] = False
 
+                            if n["service_args"]["scheduled_downtime"]:
+                                n["scheduled_downtime"] = True
+                            else:
+                                n["scheduled_downtime"] = False
+
+
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
                         # host objects contain service objects
@@ -319,6 +337,7 @@ class NinjaServer(LxmlFreeGenericServer):
                             self.new_hosts[n["host"]] = GenericHost()
                             self.new_hosts[n["host"]].name = n["host"]
                             self.new_hosts[n["host"]].status = "UP"
+                            self.new_hosts[n["host"]].visible = False
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
                             new_service = n["service"]
@@ -332,9 +351,9 @@ class NinjaServer(LxmlFreeGenericServer):
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                             self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                             self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-
-                        #print "Host: " + n["host"] + " Service: " + n["service"] + ", Status: " + n["status"] + ", Last Check: " + n["last_check"] + ", Duration: " + n["duration"] + ", Attempt: " + n["attempt"] + ", Status Information: " + n["status_information"]
-                        #print "Host: " + n["host"] + ", Service: " + n["service"] + ", Args: " + str(n["service_args"])
+                            self.new_hosts[n["host"]].services[new_service].notifications = n["notifications"]
+                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
+                            self.new_hosts[n["host"]].services[new_service].visible = True
 
                 except:
                     self.Error(sys.exc_info())
