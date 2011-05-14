@@ -10,6 +10,7 @@ from nagstamonServer.Nagios import NagiosServer
 from nagstamonServer.Icinga import IcingaServer
 from nagstamonServer.Opsview import OpsviewServer
 from nagstamonServer.Centreon import CentreonServer
+from nagstamonServer.Pingdom import PingdomServer
 
 
 # moved registration process because of circular dependencies
@@ -18,3 +19,4 @@ register_server(NagiosServer)
 register_server(IcingaServer)
 register_server(OpsviewServer)
 register_server(CentreonServer)
+register_server(PingdomServer)
