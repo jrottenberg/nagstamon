@@ -10,6 +10,11 @@ from nagstamonObjects import *
 
 from Generic import GenericServer
 
+# http://www.pingdom.com/services/api-documentation-rest/#ResourceChecks
+# Change it if you know what you are doing
+# ie : you  shouldn't  have to
+pingdom_apikey = "tn3ee3eueg1ug6o480n8mr23bv0r8k66"
+
 
 class PingdomServer(GenericServer):
     """
@@ -28,43 +33,29 @@ class PingdomServer(GenericServer):
         Get status from Pingdom
         """
         global result
-
         try:
-
             all_status = pingdomapi.Pingdom(username=self.get_username(),
                         password=self.get_password(),
-                        appkey=self.nagios_url).method("checks")
+                        appkey=pingdom_apikey).method("checks")
 
-            print "# RESULT:", len(all_status['checks'])
-            for check in  all_status['checks']:
-                # "pp" :
-                # {'status': 'up',
-                #  'lasttesttime': 1305614987,
-                #  'name': 'zzz-tester',
-                #  'created': 1305314210,
-                #  'lasterrortime': 1305324047,
-                #  'resolution': 1,
-                #  'lastresponsetime': 311,
-                #  'hostname': 'google.com',
-                #  'type': 'http',
-                #  'id': 344985}
-
+            print "# RESULT: %s checks", len(all_status['checks'])
+            for c in  all_status['checks']:
                 # pp.hostname --> n.host        # we have one hostname
                 # pp.name     --> n.service     # that can have multiple checks
-                self.new_hosts[check["hostname"]] = GenericHost()
-                self.new_hosts[check["hostname"]].name = check["hostname"]
+                self.new_hosts[c["hostname"]] = GenericHost()
+                self.new_hosts[c["hostname"]].name = c["hostname"]
                 # states come in lower case from pingdom
-                self.new_hosts[check["hostname"]].status = check["status"].upper()
-                self.new_hosts[check["hostname"]].last_check = check["lasttesttime"]
-                self.new_hosts[check["hostname"]].status_information = check["lastresponsetime"]
+                self.new_hosts[c["hostname"]].status = c["status"].upper()
+                self.new_hosts[c["hostname"]].last_check = c["lasttesttime"]
+                self.new_hosts[c["hostname"]].status_information = c["lastresponsetime"]
 
-                self.new_hosts[check["hostname"]].services[check["name"]] = GenericService()
-                self.new_hosts[check["hostname"]].services[check["name"]].host = check["hostname"]
-                self.new_hosts[check["hostname"]].services[check["name"]].name = check["name"]
-                # states come in lower case from Opsview
-                self.new_hosts[check["hostname"]].services[check["name"]].status = check["status"].upper()
-                self.new_hosts[check["hostname"]].services[check["name"]].last_check = check["lasttesttime"]
-                self.new_hosts[check["hostname"]].services[check["name"]].attempt = "1/5"
+                self.new_hosts[c["hostname"]].services[c["name"]] = GenericService()
+                self.new_hosts[c["hostname"]].services[c["name"]].host = c["hostname"]
+                self.new_hosts[c["hostname"]].services[c["name"]].name = c["name"]
+                # states come in lower case from pingdom
+                self.new_hosts[c["hostname"]].services[c["name"]].status = c["status"].upper()
+                self.new_hosts[c["hostname"]].services[c["name"]].last_check = c["lasttesttime"]
+                self.new_hosts[c["hostname"]].services[c["name"]].attempt = "1/5"
         except:
             # set checking flag back to False
             self.isChecking = False
