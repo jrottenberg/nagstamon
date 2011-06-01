@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Pingdom plugin for Nagstamon
-# Copyright (C) 2011 Julien Rottenbergl <julien@rottenberg.info>
+# Copyright (C) 2011 Julien Rottenberg <julien@rottenberg.info>
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
