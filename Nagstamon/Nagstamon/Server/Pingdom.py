@@ -2,33 +2,34 @@
 
 # Pingdom plugin for Nagstamon
 # Copyright (C) 2011 Julien Rottenberg <julien@rottenberg.info>
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+""" 
+Pingdom specific class
+
+"""
+
+
+
 
 # https://github.com/drcraig/python-restful-pingdom
 import pingdomapi
 
 import datetime
-import time
-import traceback
-import base64
-
-import nagstamonActions
-from nagstamonObjects import *
-
-from Generic import GenericServer
+from Nagstamon.Objects import *
+from Nagstamon.Server.Generic import GenericServer
 
 
 class PingdomServer(GenericServer):
@@ -53,19 +54,26 @@ class PingdomServer(GenericServer):
         webbrowser.open(self.pingdom_url + "/default")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.pingdom_url + "/default")
+            self.Debug(server=self.get_name(),
+            debug="Open monitor web page " + self.pingdom_url + "/default")
 
     def open_services(self):
         webbrowser.open(self.pingdom_url + "/reports/detailed")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open services web page " + self.pingdom_url + "/reports/detailed")
+            self.Debug(server=self.get_name(),
+            debug="Open services web page " +
+            self.pingdom_url +
+            "/reports/detailed")
 
     def open_hosts(self):
         webbrowser.open(self.pingdom_url + "/reports/detailed")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.pingdom_url + "/reports/detailed")
+            self.Debug(server=self.get_name(),
+            debug="Open hosts web page " +
+            self.pingdom_url +
+            "/reports/detailed")
 
     def GetHost(self, host):
         """
@@ -78,7 +86,12 @@ class PingdomServer(GenericServer):
         open monitor from treeview context menu
         """
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), host=host, service=service, debug="Open monitor page " + self.pingdom_url + '/reports/detailed/show/' + host)
+            self.Debug(server=self.get_name(),
+            host=host, service=service,
+            debug="Open monitor page " +
+            self.pingdom_url +
+            '/reports/detailed/show/' +
+            host)
         webbrowser.open(self.pingdom_url + '/reports/detailed/show/' + host)
 
     def _get_status(self):
@@ -100,14 +113,14 @@ class PingdomServer(GenericServer):
                 self.Debug("Check " + str(self.i) + ' : ' + str(c))
 
                 if c["status"] != 'up':
-                    # pp.id    --> n.host         # we have one hostname/id
-                    # pp.name  --> n.servicename  # that can have multiple checks
+                    # pp.id   --> n.host         # we have one hostname/id
+                    # pp.name --> n.servicename  # that can have many checks
 
                     last = datetime.datetime.fromtimestamp(c["lasttesttime"])
 
                     # states come in lower case from pingdom
                     # Pingdom --> Nagios
-                    # http://www.pingdom.com/services/api-documentation-rest/#MethodGet+Detailed+Check+Information
+                    # Pingdom API http://goo.gl/xDXdW
                     if c["status"] == 'down':
                         status = 'CRITICAL'
                     elif c["status"] == 'unconfirmed_down':
