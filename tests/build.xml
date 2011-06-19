@@ -15,7 +15,7 @@
 
   <target name="pylint" depends="clean, init">
       <apply executable="pylint" failonerror="false" output="${testdir}/out/pylint.txt" append="true">
-        <arg value="--rcfile=${testdir}s/pylintrc"/>
+        <arg value="--rcfile=${testdir}/pylintrc"/>
   
         <fileset refid="py" />
       </apply>
