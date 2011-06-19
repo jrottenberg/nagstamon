@@ -8,10 +8,10 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,24 +34,24 @@ API_URL = 'https://api.pingdom.com/api/2.0/'
 class Pingdom(object):
     def __init__(self, url=API_URL, username=None, password=None, appkey=None):
         self.url = url
-        self.appkey= appkey
+        self.appkey = appkey
         password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_manager.add_password(None, url, username, password)
         auth_handler = urllib2.HTTPBasicAuthHandler(password_manager)
         self.opener = urllib2.build_opener(auth_handler)
-        
+
     class RequestWithMethod(urllib2.Request):
         def __init__(self, url, data=None, headers={},
                      origin_req_host=None, unverifiable=False, http_method=None):
-           urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
-           if http_method:
-               self.method = http_method
+            urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
+            if http_method:
+                self.method = http_method
 
         def get_method(self):
             if self.method:
                 return self.method
             return urllib2.Request.get_method(self)
-    
+
     def method(self, url, method="GET", parameters=None):
         if parameters:
             data = urlencode(parameters)
@@ -114,6 +114,6 @@ class Pingdom(object):
                 if countryiso == country:
                     response_time = countryresponse
         else:
-           response_time = avgresponse
+            response_time = avgresponse
         return response_time
 
