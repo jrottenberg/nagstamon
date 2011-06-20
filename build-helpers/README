@@ -1,0 +1,9 @@
+You'll need 
+
+
+* Python : http://www.python.org/download/
+* PyGtk : http://www.pygtk.org/downloads.html
+* Pyinstaller : http://www.pyinstaller.org/#Download (For Windows)
+* PyWin32 : http://sourceforge.net/projects/pywin32/files/pywin32/ 
+* Inno Setup 5 : http://www.jrsoftware.org/isdl.php#stable
+

@@ -1,0 +1,26 @@
+<project name="Nagstamon" basedir=".." default="ci">
+
+  <target name="ci" depends="pylint" description="Run all ci related tasks"/>
+  <property name="testdir" value="${basedir}/tests/"/>
+
+  <fileset dir="${basedir}" includes="**/*.py" id="py" />
+
+  <target name="clean">
+    <delete dir="${testdir}/out" />
+  </target>
+
+  <target name="init">
+    <mkdir dir="tests/out" />
+  </target>
+
+  <target name="pylint" depends="clean, init">
+      <apply executable="pylint" failonerror="false" output="${testdir}/out/pylint.txt" append="true">
+        <arg value="--rcfile=${testdir}/pylintrc"/>
+  
+        <fileset refid="py" />
+      </apply>
+  </target>
+
+
+</project>
+
